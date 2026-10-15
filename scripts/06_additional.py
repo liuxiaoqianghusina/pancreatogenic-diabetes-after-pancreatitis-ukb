@@ -1,8 +1,9 @@
 """06: Additional analyses — flow-chart counts, stratum summaries with attributable fractions among the exposed (bootstrap CIs),
-continuous HbA1c effect modification (restricted cubic spline), 1/3/5/10-year absolute risks, time to diagnosis,
+1/3/5/10-year absolute risks, time to diagnosis,
 appendicitis/cholecystitis versus their own matched populations, proportional-hazards test, E-values, covariate missingness,
 and pre-attack HbA1c compared with age- and sex-matched participants.
 
+Effect modification by continuous HbA1c is estimated in 06b_continuous.py.
 Usage: python 06_additional.py [bootstrap replicates, default 300]. Requires cache/matched_main.pkl from 02_main.py."""
 import sys, numpy as np, pandas as pd
 from lifelines import CoxPHFitter
@@ -64,27 +65,6 @@ for k, f in groups.items():
                      AF_exposed=f"{est[k][3]:.0f}% ({np.percentile(af,2.5):.0f}–{np.percentile(af,97.5):.0f})",
                      NNS_5y=round(100 / est[k][0], 1)))
 R = pd.DataFrame(rows); P(R.to_string(index=False)); R.to_csv(os.path.join(RES, "F06_strata_AF.csv"), index=False, encoding="utf-8-sig")
-
-# ---------- C. continuous HbA1c effect modification: restricted cubic spline, robust variance clustered on matched set ----------
-def rcs(x, knots):
-    k = np.asarray(knots); t = lambda u: np.maximum(u, 0) ** 3
-    return np.column_stack([t(x - k[0]) - t(x - k[-2]) * (k[-1] - k[0]) / (k[-1] - k[-2]) + t(x - k[-1]) * (k[-2] - k[0]) / (k[-1] - k[-2])]) / (k[-1] - k[0]) ** 2
-kn = np.percentile(m.hba1c, [10, 50, 90]); P("Spline knots:", kn.round(1))
-X = m[["T", "E", "exp", "hba1c", "age_t0", "male", "bmi", "mid"]].copy(); X["E"] = (X.E == 1).astype(int)
-X["h1"] = X.hba1c - 36; X["h2"] = rcs(X.hba1c.values, kn)[:, 0]; X["eh1"] = X.exp * X.h1; X["eh2"] = X.exp * X.h2
-f = CoxPHFitter().fit(X.drop(columns=["hba1c"]), "T", "E", cluster_col="mid", robust=True)
-V = f.variance_matrix_; bpar = f.params_
-grid = np.arange(28, 47.5, 0.5); G = pd.DataFrame({"hba1c": grid, "h1": grid - 36, "h2": rcs(grid, kn)[:, 0]})
-idx = ["exp", "eh1", "eh2"]; lp = [];
-for _, r in G.iterrows():
-    gv = np.array([1, r.h1, r.h2]); mu = gv @ bpar[idx].values; se = np.sqrt(gv @ V.loc[idx, idx].values @ gv); lp.append((mu, se))
-G["HR"] = [np.exp(a) for a, s in lp]; G["lo"] = [np.exp(a - 1.96 * s) for a, s in lp]; G["hi"] = [np.exp(a + 1.96 * s) for a, s in lp]
-G.to_csv(os.path.join(RES, "F06_spline_HR.csv"), index=False)
-P("Spline HR (AP vs controls) at HbA1c 30/35/40/45:", {h: f"{G.loc[G.hba1c==h,'HR'].item():.2f} ({G.loc[G.hba1c==h,'lo'].item():.2f}–{G.loc[G.hba1c==h,'hi'].item():.2f})" for h in [30, 35, 40, 45]})
-from scipy.stats import chi2
-w = bpar[["eh1", "eh2"]].values; Vw = V.loc[["eh1", "eh2"], ["eh1", "eh2"]].values; wald = w @ np.linalg.solve(Vw, w)
-w2 = bpar[["eh2"]].values; wald2 = w2 @ np.linalg.solve(V.loc[["eh2"], ["eh2"]].values, w2)
-P(f"Overall interaction Wald P = {chi2.sf(wald, 2):.4f}; nonlinear interaction P = {chi2.sf(wald2, 1):.3f}")
 
 # ---------- D. absolute risk and time to diagnosis ----------
 ar = []
