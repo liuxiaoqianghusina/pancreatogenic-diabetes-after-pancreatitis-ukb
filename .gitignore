@@ -1,0 +1,22 @@
+# never commit UK Biobank data, derived data, results or manuscripts
+ukb_data/
+cache/
+results/
+figures/
+tables/
+supplement/
+*.csv
+*.pkl
+*.parquet
+*.feather
+*.txt
+!requirements.txt
+*.docx
+*.pdf
+*.png
+*.tiff
+*.md
+!README.md
+__pycache__/
+.DS_Store
+.Rhistory
