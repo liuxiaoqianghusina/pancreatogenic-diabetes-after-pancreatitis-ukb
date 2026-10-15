@@ -1,7 +1,7 @@
 """05: Controls matched on sex and birth year only (the usual approach of previous database studies) vs. additionally on BMI and
 pre-attack HbA1c, to show how much the conventional approach overestimates the association."""
 import numpy as np, pandas as pd
-import F_common as C
+import common as C
 from common import *
 
 df = load(); base = base_cohort(df); cases = exposed(base, "AP")
