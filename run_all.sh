@@ -6,3 +6,5 @@ for s in 01_load.py 01b_extra_codes.py 01c_opcs.py 02_main.py 03_sensitivity.py;
 echo "== 04_finegray.R"; Rscript 04_finegray.R
 for s in 05_conventional_matching.py 06_additional.py 06b_continuous.py 07_severity.py 08_extensions.py 09_early_window.py \
          10_gp_linked.py 11_prs.py 12_table1.py 13_figures.py 14_graphical_abstract.py 15_supplement.py; do echo "== $s"; python3 "$s"; done
+python3 16_nmr_prep.py; Rscript 17_nmr_models.R
+for s in 18_nmr_summary.py 19_figure4.py 20_cvd_after_ppdm.py; do echo "== $s"; python3 "$s"; done

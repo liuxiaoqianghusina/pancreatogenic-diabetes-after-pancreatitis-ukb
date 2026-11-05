@@ -5,7 +5,8 @@ Analysis code for the study. Patients with incident acute pancreatitis (AP) in U
 - a type 2 diabetes polygenic risk score;
 - active comparators (acute appendicitis, acute cholecystitis);
 - negative-control outcomes;
-- a set of sensitivity analyses.
+- a set of sensitivity analyses;
+- the pre-attack NMR metabolic profile, tested for whether measures that predict diabetes in controls also predict it after the attack.
 
 ## Data
 
@@ -17,6 +18,8 @@ The repository contains **code only**. No UK Biobank data, individual-level resu
 | `UKB619657_population_characteristics_2025Nov.csv` | p31 sex, p34 / p52 birth year and month, p191 date lost to follow-up, p22189 Townsend index |
 | `UKB619657_biological_samples_2025Nov.csv` | p30750 HbA1c, p30740 glucose, p30870 triglycerides |
 | `UKB619657_assessment_center_2025Nov.csv` | p53 assessment date, p21000 ethnicity, p21001 BMI, p20116 smoking status, p20117 alcohol drinker status |
+
+The NMR metabolomics table (`UKB_NMR_FILE`, default `UKB619657_NMR_metabolomics_with_eid_2025Nov.csv` in `UKB_DATA_DIR`) needs fields p23400–p23648 and p23650 (instance 0); the assessment centre table also supplies p6177, p6153 (medication) and p74 (time since last meal). Measure names are taken from the RAP data dictionary if `UKB_DATA_DICTIONARY` points to it.
 
 The polygenic score file (`UKB_PRS_FILE`) needs these columns:
 
@@ -36,6 +39,8 @@ The polygenic score file (`UKB_PRS_FILE`) needs these columns:
 ```bash
 export UKB_DATA_DIR=/path/to/ukb_tables
 export UKB_PRS_FILE=/path/to/t2d_prs.csv
+export UKB_NMR_FILE=/path/to/nmr_table.csv              # optional, see Data
+export UKB_DATA_DICTIONARY=/path/to/data_dictionary.csv  # optional, for NMR measure names
 export PPDM_OUTPUT_DIR=/path/to/output     # cache/, results/, figures/, tables/ and supplement/ are created here
 bash run_all.sh
 ```
@@ -61,6 +66,8 @@ Scripts are numbered in run order. Each later script reads the cached cohort and
 | `09_early_window.py`, `10_gp_linked.py` | Early post-attack window; participants with linked primary care records |
 | `11_prs.py` | Type 2 diabetes polygenic risk: validity, additional matching on PRS tertile, interaction, joint strata |
 | `12_table1.py`, `13_figures.py`, `14_graphical_abstract.py`, `15_supplement.py` | Table 1, Figures 1–3, graphical abstract, supplemental figure and tables |
+| `16_nmr_prep.py`, `17_nmr_models.R`, `18_nmr_summary.py`, `19_figure4.py` | Pre-attack NMR metabolomics: AP × measure interaction for 249 measures (overall, by etiology, sensitivity analyses), summary tables, Figure 4 |
+| `20_cvd_after_ppdm.py` | Count of cardiovascular events after post-pancreatitis diabetes (reported as a limitation) |
 | `md2docx.py` | Markdown-to-Word converter used for the supplement |
 
 ## License
